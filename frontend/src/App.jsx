@@ -1,15 +1,11 @@
 
-import {Outlet} from 'react-router-dom'
-import './App.css'
 
-function App(){
 
-  return (
-    <>
-    
-    </>
-  )
+import React from 'react';
+import Login from './Login';
+
+function App() {
+  return <Login />;
 }
 
-export default App
-
+export default App;
