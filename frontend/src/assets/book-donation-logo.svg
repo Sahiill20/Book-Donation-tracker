@@ -1,0 +1,17 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="#4B89DC"/>
+  
+  <!-- Books stack -->
+  <rect x="55" y="70" width="90" height="20" rx="2" fill="#F5D76E" transform="rotate(-5 55 70)"/>
+  <rect x="50" y="90" width="100" height="20" rx="2" fill="#F25F5C" transform="rotate(2 50 90)"/>
+  <rect x="52" y="110" width="95" height="20" rx="2" fill="#70C1B3" transform="rotate(-3 52 110)"/>
+  <rect x="57" y="130" width="85" height="20" rx="2" fill="#9B59B6" transform="rotate(1 57 130)"/>
+  
+  <!-- Circular arrow representing donation/sharing -->
+  <path d="M160,80 A50,50 0 1,1 120,150" fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <polygon points="115,145 120,160 135,148" fill="white"/>
+  
+  <!-- Text (optional) -->
+  <text x="100" y="50" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">BOOK SHARE</text>
+</svg>
