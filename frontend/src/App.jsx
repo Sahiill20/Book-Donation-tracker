@@ -11,9 +11,7 @@ function App() {
     <>
       <AuthProvider>
       <Header/>
-      <main className="w-full min-h-screen px-0 py-0 ml-6">
-
-
+        <main className="w-full h-screen">
           <Outlet/>
         </main>
       <Footer/>

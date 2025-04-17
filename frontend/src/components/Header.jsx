@@ -5,13 +5,13 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="bg-sky-200 text-black px-6 py-8 flex justify-between items-center shadow relative">
+    <header className="bg-sky-200 text-black px-6 py-8 flex justify-between items-center shadow relative ">
       <div className="text-xl font-bold">Bookbridge</div>
       
       <nav className="flex items-center space-x-6 text-md font-medium">
-        <a href="#home" className="hover:underline">Home</a>
-        <a href="#about" className="hover:underline">About Us</a>
-        <a href="#contact" className="hover:underline">Contact Us</a>
+        <a href="/home" className="hover:underline">Home</a>
+        <a href="/about" className="hover:underline">About Us</a>
+        <a href="/contact" className="hover:underline">Contact Us</a>
         <Bell className="w-5 h-5 cursor-pointer" />
 
         {/* Profile Picture */}
