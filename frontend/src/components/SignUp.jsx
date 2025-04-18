@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
 import bookLogo from '../assets/book-donation-logo.svg';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 function SignUp() {
   const [error, setError] = useState('');
@@ -28,7 +29,16 @@ function SignUp() {
       const { email, password } = data;
       
       // Register the user with Firebase Auth
-      await registerUser(email, password, {
+      const userCredential = await registerUser(email, password, {
+        fullName: data.fullName,
+        username: data.username,
+        phoneNumber: data.phoneNumber,
+        address: data.address
+      });
+      const user = userCredential.user;
+      await axios.post('http://localhost:3000/api/users/register', {
+        uid: user.uid,
+        email,
         fullName: data.fullName,
         username: data.username,
         phoneNumber: data.phoneNumber,

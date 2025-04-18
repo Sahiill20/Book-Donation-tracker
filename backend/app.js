@@ -2,7 +2,7 @@ const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors'); 
 const donateRoutes = require('./src/donate/donateRoutes');
-
+const userRoutes = require('./src/users/userRoutes');
 
 const app = express();
 app.use(express.json());
@@ -13,6 +13,7 @@ app.use(cors({
 require('dotenv').config()
 
 app.use('/api/donate', donateRoutes);
+app.use('/api/users',userRoutes);
 
 async function main() {
     await mongoose.connect(process.env.DB_URL);

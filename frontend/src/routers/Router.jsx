@@ -4,7 +4,7 @@ import App from "../App";
 import SignUp from "../components/SignUp";
 import Home from "../pages/Home";
 import Dashboard from "../pages/DashBoard";
-import DonatePage from "../pages/DonatePage";
+// import DonatePage from "../pages/DonatePage";
 
 const Router = createBrowserRouter([
   {
@@ -28,10 +28,10 @@ const Router = createBrowserRouter([
         path:"/Dashboard",
         element:<Dashboard />
       },
-      {
-        path:"/DonatePage",
-        element:<DonatePage />
-      },
+      // {
+      //   path:"/DonatePage",
+      //   element:<DonatePage />
+      // },
     ]
   },
 ]);
