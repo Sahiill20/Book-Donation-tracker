@@ -16,14 +16,25 @@ app.use('/api/donate', donateRoutes);
 app.use('/api/users',userRoutes);
 
 async function main() {
-    await mongoose.connect(process.env.DB_URL);
-    app.use('/',(req,res) =>{
-        res.send("Hello Sahil");
-    })
-  }
-  main().then(() => console.log("MongoDB connected")).catch(err => console.log(err));
+    try {
+        await mongoose.connect(process.env.DB_URL, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
 
-app.listen(3000, () => {
-    console.log("server is  running beautifully");
-})
+        console.log("MongoDB connected");
 
+        app.use('/', (req, res) => {
+            res.send("Hello Sahil");
+        });
+
+        app.listen(3000, () => {
+            console.log("Server is running beautifully");
+        });
+
+    } catch (err) {
+        console.error("Connection error:", err);
+    }
+}
+
+main();
