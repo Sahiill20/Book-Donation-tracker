@@ -1,16 +1,18 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import donateRoutes from './src/Donate/donateRoutes.js'; // adjust path if needed
+const express = require('express')
+const mongoose = require('mongoose')
+const cors = require('cors'); 
+const donateRoutes = require('./src/donate/donateRoutes');
 
-dotenv.config();
 
 const app = express();
-
-app.use(cors());
 app.use(express.json());
-app.use('/api', donateRoutes);
+app.use(cors({
+    origin: 'http://localhost:5173', // Only allow frontend origin
+    credentials: true
+  }));
+require('dotenv').config()
+
+app.use('/api/donate', donateRoutes);
 
 async function main() {
     try {
