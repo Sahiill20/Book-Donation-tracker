@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const donateRoutes = require('./src/donate/donateRoutes');
 const userRoutes = require('./src/users/userRoutes');
+const bookRoutes = require('./src/books/bookRoutes')
 
 const app = express();
 
@@ -26,6 +27,7 @@ require('dotenv').config();
 // Routes
 app.use('/api/donate', donateRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/books', bookRoutes);
 
 async function main() {
   try {

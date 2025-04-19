@@ -5,6 +5,7 @@ import SignUp from "../components/SignUp";
 import Home from "../pages/Home";
 import Dashboard from "../pages/DashBoard";
 import DonatePage from "../pages/DonatePage";
+import RequestBook from "../pages/RequestBook"
 import { Navigate } from "react-router-dom";
 
 const Router = createBrowserRouter([
@@ -38,6 +39,10 @@ const Router = createBrowserRouter([
         path:"/DonatePage",
         element:<DonatePage />
       },
+      {
+        path:"/RequestBook",
+        element:<RequestBook />
+      }
     ]
   },
 ]);
