@@ -18,7 +18,7 @@ function Login() {
     
     try {
       await loginUser(data.email, data.password);
-      navigate('/dashboard');
+      navigate('/home');
     } catch (err) {
       setError('Please register your email and password');
     } finally {

@@ -42,10 +42,15 @@ export const AuthProvider = ({children}) => {
             setLoading(false);
 
             if(user){
-                const {email, displayName, photoUrl} = user;
-                const userData = {
-                    email, username: displayName, photo:photoUrl
-                }
+                // Store user data in localStorage
+                localStorage.setItem('user', JSON.stringify({
+                    _id: user.uid,  // Using Firebase UID as _id
+                    email: user.email,
+                    username: user.displayName,
+                    photo: user.photoURL
+                }));
+            } else {
+                localStorage.removeItem('user');
             }
         })
         return () => unSubscribe();

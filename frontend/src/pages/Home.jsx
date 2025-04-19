@@ -17,9 +17,11 @@ export default function BookDonationPage() {
         <div className="bg-white w-full mt-10 pb-10">
 
         <div className="flex justify-center gap-60 mt-10 pt-22">
+          <a href="/DonatePage">
           <button className="bg-blue-400 text-white rounded-full w-32 h-32 flex items-center justify-center text-lg font-semibold shadow-md hover:bg-blue-500 text-center">
             Donate<br />Books
           </button>
+          </a>
           <button className="bg-blue-400 text-white rounded-full w-32 h-32 flex items-center justify-center text-lg font-semibold shadow-md hover:bg-blue-500 text-center">
             Request<br />Books
           </button>
