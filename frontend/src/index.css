@@ -9,3 +9,9 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+  .swiper-button-next,
+.swiper-button-prev {
+  color: #0a0a0a; /* optional: change arrow color */
+  scale: 0.6;     /* make them smaller */
+  top: 40%;       /* optional: adjust vertical position */
+}

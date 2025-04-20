@@ -5,7 +5,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="bg-sky-200 text-black px-6 py-8 flex justify-between items-center shadow relative ">
+    <header className=" bg-sky-200 text-black px-6 py-8 flex justify-between items-center">
       <div className="text-xl font-bold">Bookbridge</div>
       
       <nav className="flex items-center space-x-6 text-md font-medium">

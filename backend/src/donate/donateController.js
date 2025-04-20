@@ -11,7 +11,7 @@ const createDonation = async (req, res) => {
     // Create donation with all fields from req.body
     const donation = new Donate({
       ...req.body,
-      image: req.file.path, // Use the path from Multer
+      image: req.file.path.replace(/\\/g, '/'), // Use the path from Multer
       quantity: parseInt(req.body.quantity) || 1,
       donorId: req.body.donorId 
     });

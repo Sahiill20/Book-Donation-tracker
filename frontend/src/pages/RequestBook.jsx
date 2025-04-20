@@ -146,7 +146,7 @@ export default function BookRequestPage() {
           >
             <div className="flex gap-3">
             <img
-            src={book.image || '/fallback-image.jpg'}
+            src={book.image ? `http://localhost:3000/${book.image}` : '/fallback-image.jpg'}
             alt={`${book.title} book cover`}
             className="w-24 h-32 object-cover rounded "
             />
