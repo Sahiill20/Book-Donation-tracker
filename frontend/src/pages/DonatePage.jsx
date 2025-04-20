@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { auth } from '../firebase/firebase.config';
 import axios from "axios";
-
+import { useNavigate } from "react-router-dom";
 
 export default function DonateBooksPage() {
-  
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -25,6 +25,24 @@ export default function DonateBooksPage() {
     };
   }, [preview]);
 
+  const updateDashboardStats = (quantity) => {
+    const currentStats = JSON.parse(localStorage.getItem('dashboardStats')) || {
+      donatedBooks: 0,
+      pendingDonations: 0,
+      approvedRequests: 0,
+      pendingRequests: 0,
+      rewardsEarned: 0
+    };
+    
+    localStorage.setItem('dashboardStats', JSON.stringify({
+      ...currentStats,
+      pendingDonations: currentStats.pendingDonations + quantity,
+    }));
+    
+    // Trigger storage event for other tabs
+    window.dispatchEvent(new Event('storage'));
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -42,71 +60,52 @@ export default function DonateBooksPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    const user = JSON.parse(localStorage.getItem("user"));
-    const token = await auth.currentUser?.getIdToken();
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = await auth.currentUser?.getIdToken();
       if (!user?._id || !token) {
-        alert("User not found. Please login again.");
-        setIsLoading(false);
+        alert("Please login again.");
         return;
       }
-    // Append all fields individually
-    const formData = new FormData();
-    formData.append('donorId', user._id);
-    formData.append('title', form.title);
-    formData.append('description', form.description);
-    formData.append('genre', form.genre);
-    formData.append('condition', form.condition);
-    formData.append('location', form.location);
-    formData.append('name', form.name);
-    formData.append('email', form.email);
-    formData.append('quantity', form.quantity);
-    formData.append('image', form.image); // File must be last
-    
-    try {
-      await axios.post("http://localhost:3000/api/donate/donate", formData, {
-        headers: { "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${token}`
-         }
-      });
-      console.log("Donation successful:");
-    alert("Book donation submitted successfully!");
-    setIsLoading(false);
 
-    // Optional: Reset form
-    setForm({
-      title: '',
-      description: '',
-      genre: '',
-      condition: '',
-      location: '',
-      name: '',
-      email: '',
-      quantity: 1,
-      image: null,
-    });
-    setPreview(null);
-      // ... success handling
+      const formData = new FormData();
+      formData.append('donorId', user._id);
+      formData.append('title', form.title);
+      formData.append('description', form.description);
+      formData.append('genre', form.genre);
+      formData.append('condition', form.condition);
+      formData.append('location', form.location);
+      formData.append('name', form.name);
+      formData.append('email', form.email);
+      formData.append('quantity', form.quantity);
+      if (form.image) formData.append('image', form.image);
+
+      await axios.post("http://localhost:3000/api/donate/donate", formData, {
+        headers: { 
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${token}` 
+        }
+      });
+
+      updateDashboardStats(form.quantity);
+      alert("Donation submitted!");
+      navigate("/dashboard");
     } catch (err) {
-      console.error('Raw error:', err);
-      console.error('Error response:', err.response);
-      alert(err.response?.data?.message || err.message || "Upload failed");
+      alert(err.response?.data?.message || "Submission failed");
     } finally {
-      setIsLoading(false); // <- Move to finally so it resets in all cases
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
-      {/* Top Button Row */}
       <div className="w-full max-w-8xl flex justify-end mb-9"></div>
 
-      {/* Main Content Row */}
       <div className="flex flex-col lg:flex-row items-start gap-12 w-full max-w-7xl">
-        {/* Illustration Section */}
         <div className="w-full lg:w-1/2 text-center lg:text-left">
           <img
             src="/donate-placeholder.jpg"
-            alt="Donate Books Illustration"
+            alt="Donate Books"
             className="w-full max-w-md mx-auto lg:mx-0 pb-10"
           />
           <h2 className="text-4xl font-bold text-blue-900 mt-4">Donate Your Books</h2>
@@ -115,77 +114,79 @@ export default function DonateBooksPage() {
           </p>
         </div>
 
-        {/* Form Section */}
         <div className="w-full lg:w-1/2 bg-blue-100 rounded-2xl shadow-md max-h-[calc(100vh-150px)] overflow-y-auto">
           <form className="p-6" onSubmit={handleSubmit}>
             <h3 className="text-xl font-bold text-blue-900 mb-4">Add Book Information</h3>
 
-            <label className="block mb-2 font-medium">Book Title</label>
-            <input
-              type="text"
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-              placeholder="Book Title"
-              className="w-full p-2 mb-4 border rounded"
-            />
+            <div className="space-y-4">
+              <div>
+                <label className="block mb-2 font-medium">Book Title*</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
 
-            <label className="block mb-2 font-medium">Book Description</label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Short description"
-              className="w-full p-2 mb-4 border rounded"
-            />
-
-            <div className="flex flex-col sm:flex-row gap-4 mb-4">
-              <div className="w-full sm:w-1/2">
-                <label className="block mb-2 font-medium">Genre</label>
-                <select
-                  name="genre"
-                  value={form.genre}
+              <div>
+                <label className="block mb-2 font-medium">Description</label>
+                <textarea
+                  name="description"
+                  value={form.description}
                   onChange={handleChange}
                   className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Genre</option>
-                  <option>Fiction</option>
-                  <option>Non-Fiction</option>
-                  <option>Science</option>
-                  <option>History</option>
-                  <option>Biography</option>
-                  <option>Other</option>
-                </select>
+                />
               </div>
-              <div className="w-full sm:w-1/2">
-                <label className="block mb-2 font-medium">Condition</label>
-                <select
-                  name="condition"
-                  value={form.condition}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-2 font-medium">Genre*</label>
+                  <select
+                    name="genre"
+                    value={form.genre}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select</option>
+                    <option>Fiction</option>
+                    <option>Non-Fiction</option>
+                    <option>Children's</option>
+                    <option>Educational</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-2 font-medium">Condition*</label>
+                  <select
+                    name="condition"
+                    value={form.condition}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select</option>
+                    <option>New</option>
+                    <option>Like New</option>
+                    <option>Good</option>
+                    <option>Fair</option>
+                  </select>
+                </div>
+              </div>
+
+              
+                <label className="block mb-2 font-medium">Location*</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={form.location}
                   onChange={handleChange}
+                  required
                   className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Condition</option>
-                  <option>New</option>
-                  <option>Like New</option>
-                  <option>Good</option>
-                  <option>Fair</option>
-                  <option>Poor</option>
-                </select>
-              </div>
-            </div>
-
-            <label className="block mb-2 font-medium">Location</label>
-            <input
-              type="text"
-              name="location"
-              value={form.location}
-              onChange={handleChange}
-              placeholder="City, street, or area"
-              className="w-full p-2 mb-4 border rounded"
-            />
-
-            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                />
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
               <div className="w-full sm:w-1/2">
                 <label className="block mb-2 font-medium">Your Name</label>
                 <input
@@ -210,41 +211,42 @@ export default function DonateBooksPage() {
               </div>
             </div>
 
-            <label className="block mb-2 font-medium">Quantity</label>
-            <input
-              type="number"
-              name="quantity"
-              value={form.quantity}
-              onChange={handleChange}
-              className="w-full p-2 mb-4 border rounded"
-            />
+              <div>
+                <label className="block mb-2 font-medium">Quantity*</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  min="1"
+                  value={form.quantity}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-2 border rounded"
+                />
+              </div>
 
-<label className="block mb-2 font-medium">Upload Book Image</label>
-    <input
-      type="file"
-      accept="image/*"
-      name="image"
-      onChange={handleFileChange}
-      className="w-full p-2 mb-2 border rounded bg-blue-100"
-    />
-    {/* Image preview (shown after selection) */}
-    {preview && (
-      <img
-        src={preview}
-        alt="Preview"
-        className="mt-2 w-32 h-32 object-cover rounded"
-      />
-    )}
+              <div>
+                <label className="block mb-2 font-medium">Book Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full p-2 border rounded bg-white"
+                />
+                {preview && (
+                  <img src={preview} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded" />
+                )}
+              </div>
 
-    <button
-      type="submit"
-      disabled={isLoading}
-      className={`w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition ${
-        isLoading ? "opacity-50" : ""
-      }`}
-    >
-      {isLoading ? "Processing..." : "Donate Book"}
-    </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition ${
+                  isLoading ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+              >
+                {isLoading ? "Processing..." : "Donate Book"}
+              </button>
+            </div>
           </form>
         </div>
       </div>
