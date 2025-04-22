@@ -32,7 +32,7 @@ function Login() {
     
     try {
       await signInWithGoogle();
-      navigate('/');
+      navigate('/home');
     } catch (err) {
       setError('Login with Google failed');
     } finally {

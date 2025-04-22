@@ -29,7 +29,32 @@ const createDonation = async (req, res) => {
     });
   }
 };
+const getDonationCount = async (req, res) => {
+  try {
+    const donorId = req.query.donorId;
+    if (!donorId) {
+      return res.status(400).json({ message: 'Missing donorId' });
+    }
+    // Alternative approach if $toInt doesn't work
+    const donations = await Donate.find({ donorId });
+    let totalDonated = 0;
+    
+    donations.forEach(donation => {
+      totalDonated += +(donation.quantity) || 0;
+    });
+    
+    res.status(200).json({ totalDonated });
+    console.log('Fetching donation count for donorId:', donorId);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ 
+      message: 'Server error',
+      error: error.message 
+    });
+  }
+};
 
 module.exports = {
   createDonation,
+  getDonationCount
 };

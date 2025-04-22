@@ -44,8 +44,20 @@ function SignUp() {
         phoneNumber: data.phoneNumber,
         address: data.address
       });
+
+      localStorage.setItem("userData", JSON.stringify({
+        uid: user.uid,
+        email,
+        fullName: data.fullName,
+        username: data.username,
+        phoneNumber: data.phoneNumber,
+        address: data.address
+      }));
+  
+
       
-      navigate('/login');
+      
+      navigate('/home');
     } catch (err) {
       console.error("Registration error:", err);
       setError(err.message || 'Registration failed. Please try again.');
