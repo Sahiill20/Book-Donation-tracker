@@ -66,18 +66,39 @@ export default function BookRequestPage() {
     setActiveRequestId(bookId);
   };
 
-  const confirmRequest = (bookId, title) => {
-    setRequestSuccess(`Request sent for "${title}"`);
-    setSuccessBookId(bookId);
-    setShowSuccessMessage(true);
-    setActiveRequestId(null);
-    
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-      setSuccessBookId(null);
-      setRequestSuccess(null);
-    }, 3000);
+  const confirmRequest = async (bookId, title) => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('userData')); 
+
+      if (!userData || !userData.email || !userData.uid) {
+        console.error('User not logged in properly. Missing email or userId.');
+        alert('Please login first to request a book.');
+        return;
+      }
+
+      const book = books.find(b => b._id === bookId);
+      await axios.post('http://localhost:3000/api/bookRequests/create', {
+        bookId,
+        donorId: book.userId,  // or however you're storing it
+        requesterId: userData.uid,
+        requesterEmail: userData.email
+      });
+  
+      setRequestSuccess(`Request sent for "${title}"`);
+      setSuccessBookId(bookId);
+      setShowSuccessMessage(true);
+      setActiveRequestId(null);
+  
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+        setSuccessBookId(null);
+        setRequestSuccess(null);
+      }, 3000);
+    } catch (err) {
+      console.error("Error sending book request:", err);
+    }
   };
+  
 
   const paginatedBooks = Array.isArray(filteredBooks) ? filteredBooks.slice(0, page * itemsPerPage) : [];
 

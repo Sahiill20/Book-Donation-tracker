@@ -4,33 +4,40 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 
 export default function BookDonationPage() {
   const [donatedBooks, setDonatedBooks] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDonatedBooks = async () => {
       try {
         const res = await axios.get('http://localhost:3000/api/books/books?limit=12');
-        console.log("Fetched books on Home:", res.data);
-  
         if (Array.isArray(res.data)) {
           setDonatedBooks(res.data);
         } else {
-          console.error("Expected array, got:", res.data);
           setDonatedBooks([]);
         }
       } catch (err) {
         console.error("Error fetching donated books:", err);
       }
     };
-  
     fetchDonatedBooks();
   }, []);
 
+  const handleBookClick = (book) => {
+    navigate('/RequestBook', { 
+      state: { 
+        prefilledTitle: book.title,
+        prefilledGenre: book.genre
+      } 
+    });
+  };
+
   return (
     <div className="bg-sky-200 min-h-screen">
-      <header className="text-center ">
+      <header className="text-center">
         <h1 className="text-3xl font-bold mt-0 pt-17">Donate books to those in need</h1>
         <p className="text-2xl font-bold text-100 mt-2">Your contributions can make a big difference</p>
       </header>
@@ -42,7 +49,7 @@ export default function BookDonationPage() {
               Donate<br />Books
             </button>
           </a>
-          <a href="/RequestBook">
+          <a href="/BookRequestPage">
             <button className="bg-blue-400 text-white rounded-full w-32 h-32 flex items-center justify-center text-lg font-semibold shadow-md hover:bg-blue-500 text-center cursor-pointer">
               Request<br />Books
             </button>
@@ -67,7 +74,10 @@ export default function BookDonationPage() {
             >
               {donatedBooks.length > 0 ? donatedBooks.map((book, index) => (
                 <SwiperSlide key={index}>
-                  <div className="flex gap-5 cursor-pointer">
+                  <div 
+                    className="flex gap-5 cursor-pointer hover:bg-gray-100 p-2 rounded transition"
+                    onClick={() => handleBookClick(book)}
+                  >
                     <img
                       src={book.image ? `http://localhost:3000/${book.image}` : '/fallback-image.jpg'}
                       alt={`${book.title} book cover`}
@@ -89,7 +99,7 @@ export default function BookDonationPage() {
           </div>
 
           <div className="text-center mt-6">
-            <a href="/RequestBook" className="text-blue-700 font-medium hover:underline cursor-pointer">
+            <a href="/BookRequestPage" className="text-blue-700 font-medium hover:underline cursor-pointer">
               Show more
             </a>
           </div>
@@ -104,4 +114,3 @@ export default function BookDonationPage() {
     </div>
   );
 }
-

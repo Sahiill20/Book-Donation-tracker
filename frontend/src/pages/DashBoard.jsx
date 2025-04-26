@@ -3,8 +3,11 @@ import { FaSignOutAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { auth } from '../firebase/firebase.config';
 import toast, { Toaster } from "react-hot-toast";
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  
   const [userData, setUserData] = useState({
     fullName: "",
     email: "",
@@ -24,7 +27,21 @@ const Dashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [imageUpdated, setImageUpdated] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [donationDates, setDonationDates] = useState([]);
+
   const currentDate = new Date();
+
+  // Helper Functions
+  const getInitials = (name = '') =>
+    name.trim().split(' ').map(n => n[0]).join('').toUpperCase();
+
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+    });
 
   const handleEditToggle = () => {
     if (isEditing) {
@@ -39,31 +56,6 @@ const Dashboard = () => {
     localStorage.removeItem('userProfileImage');
     toast('Profile photo removed.', { icon: '🗑️' });
   };
-
-  const getInitials = (name = '') =>
-    name.trim().split(' ').map(n => n[0]).join('').toUpperCase();
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('userData');
-    if (savedUser) {
-      setUserData(JSON.parse(savedUser));
-    }
-  }, []);
-
-  useEffect(() => {
-    const savedImage = localStorage.getItem('userProfileImage');
-    if (savedImage) {
-      setProfileImage(savedImage);
-    }
-  }, []);
-
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-    });
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -94,6 +86,81 @@ const Dashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to log out?')) {
+      auth.signOut().then(() => {
+        toast.success('Logged out successfully!');
+        navigate('/Login');
+        window.location.reload();
+      });
+    }
+  };
+
+  // Enhanced Calendar Functions
+  const addDonationDate = (date = new Date()) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const updatedDates = [...new Set([...donationDates, dateStr])];
+    setDonationDates(updatedDates);
+    localStorage.setItem('donationDates', JSON.stringify(updatedDates));
+  };
+
+  const generateCalendarDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    
+    const emptyCells = Array(firstDay).fill(null);
+    
+    const days = Array.from({ length: totalDays }, (_, i) => {
+      const day = i + 1;
+      const currentDayDate = new Date(year, month, day);
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      return {
+        day,
+        isDonationDay: donationDates.includes(dateStr),
+        isToday: day === currentDate.getDate() && 
+                 month === currentDate.getMonth() && 
+                 year === currentDate.getFullYear()
+      };
+    });
+    
+    return [...emptyCells, ...days];
+  };
+
+  // Make addDonationDate available globally
+  useEffect(() => {
+    window.addDonationDate = addDonationDate;
+    return () => {
+      delete window.addDonationDate;
+    };
+  }, [donationDates]);
+
+  // Fetching stored data
+  useEffect(() => {
+    const savedUser = localStorage.getItem('userData');
+    if (savedUser) {
+      setUserData(JSON.parse(savedUser));
+    }
+
+    const savedImage = localStorage.getItem('userProfileImage');
+    if (savedImage) {
+      setProfileImage(savedImage);
+    }
+
+    const savedDonations = JSON.parse(localStorage.getItem('donationDates')) || [];
+    const normalizedDates = savedDonations.map(date => {
+      const d = new Date(date);
+      return new Date(Date.UTC(
+        d.getUTCFullYear(),
+        d.getUTCMonth(),
+        d.getUTCDate()
+      )).toISOString().split('T')[0];
+    });
+    setDonationDates(normalizedDates);
+  }, []);
+
+  // Fetch stats from server
   useEffect(() => {
     const fetchDonationStats = async () => {
       try {
@@ -115,35 +182,19 @@ const Dashboard = () => {
 
       } catch (error) {
         console.error("Error fetching donation stats:", error);
-        const localStats = JSON.parse(localStorage.getItem('dashboardStats')) || stats;
-        setStats(localStats);
+        const localStatsFallback = JSON.parse(localStorage.getItem('dashboardStats')) || stats;
+        setStats(localStatsFallback);
       }
     };
 
     fetchDonationStats();
   }, []);
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to log out?')) {
-      // Perform actual logout with Firebase
-      auth.signOut().then(() => {
-        toast.success('Logged out successfully!');
-        localStorage.clear();
-        window.location.reload();
-      });
-    }
-  };
-
-  const generateCalendarDays = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const totalDays = new Date(year, month + 1, 0).getDate();
-    return Array.from({ length: totalDays }, (_, i) => i + 1);
-  };
-
   return (
     <div className="flex h-screen bg-gray-100">
       <Toaster />
+      
+      {/* Sidebar */}
       <div className="w-64 bg-sky-200 text-gray-300 flex flex-col mt-6 ml-5 mb-7 rounded-lg px-2 py-1">
         <div className="p-6 border-b border-white text-white">
           <div className={`w-20 h-20 bg-blue-500 rounded-full mx-auto mb-4 overflow-hidden relative transition-opacity duration-500 ${imageUpdated ? 'opacity-50' : 'opacity-100'}`}>
@@ -200,7 +251,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Profile Summary */}
           <div className="bg-white p-6 rounded-lg shadow text-center">
@@ -209,30 +260,52 @@ const Dashboard = () => {
             </div>
             <h2 className="text-xl font-semibold mb-1">{userData.fullName}</h2>
             <button className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors" onClick={handleEditToggle}>
-              Edit Profile
+              {isEditing ? 'Save Profile' : 'Edit Profile'}
             </button>
           </div>
 
-          {/* Stats: Donated Books */}
+          {/* Donated Books */}
           <div className="bg-white p-6 rounded-lg shadow text-center">
             <div className="text-3xl font-bold text-green-600">{stats.donatedBooks}</div>
             <p className="text-gray-600 mt-1">Books Donated</p>
           </div>
 
-          {/* Calendar */}
+          {/* Enhanced Calendar */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-center font-semibold mb-4">
               {currentDate.toLocaleString('default', { month: 'long' })} {currentDate.getFullYear()}
             </h3>
             <div className="grid grid-cols-7 gap-1">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                <div key={`${day}-${index}`} className="text-center font-medium text-gray-500">
-    {day}
-  </div>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                <div key={`day-${idx}`} className="text-center font-medium text-gray-500">{day}</div>
               ))}
-              {generateCalendarDays().map(day => (
-                <div key={day} className="text-center p-2">{day}</div>
+              {generateCalendarDays().map((dayData, idx) => (
+                dayData === null ? (
+                  <div key={`empty-${idx}`} className="text-center p-2"></div>
+                ) : (
+                  <div 
+                    key={`day-${dayData.day}`}
+                    className={`text-center p-2 relative rounded-full 
+                      ${dayData.isToday ? 'bg-blue-100 font-bold' : ''}
+                      hover:bg-gray-100 cursor-default`}
+                  >
+                    {dayData.day}
+                    {dayData.isDonationDay && (
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-green-500 rounded-full"></div>
+                    )}
+                  </div>
+                )
               ))}
+            </div>
+            <div className="mt-4 flex justify-center items-center">
+              <div className="flex items-center mr-4">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                <span className="text-xs">Donation</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-blue-100 rounded-full mr-1"></div>
+                <span className="text-xs">Today</span>
+              </div>
             </div>
           </div>
 
@@ -259,7 +332,7 @@ const Dashboard = () => {
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
               <div
                 className="bg-purple-600 h-2 rounded-full"
-                style={{ width: `${(stats.rewardsEarned / 150) * 100}%` }}
+                style={{ width: `${Math.min((stats.rewardsEarned / 150) * 100, 100)}%` }}
               />
             </div>
           </div>
