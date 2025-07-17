@@ -1,8 +1,12 @@
 // books/bookRoutes.js
 const express = require('express');
 const router = express.Router();
-const { getAllBooks } = require('../books/bookController');
+const { getAllBooks, getBookById } = require('../books/bookController');
 
-router.get('/books', getAllBooks); // GET /api/books
+// Existing route to get all books
+router.get('/books', getAllBooks);
+
+// New route to get a book by its ID
+router.get('/books/:bookId', getBookById); // Use :bookId for a specific book
 
 module.exports = router;

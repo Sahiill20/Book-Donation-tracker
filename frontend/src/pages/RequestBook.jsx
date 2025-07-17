@@ -16,6 +16,8 @@ export default function BookRequestPage() {
   const [successBookId, setSuccessBookId] = useState(null);
 //   const [locationOpen, setLocationOpen] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const itemsPerPage = 4;
 
   const genre = ['Fiction', 'Non Fiction', 'Horror', 'Crime', 'Thriller', 'Educational', 'Dystopian'];
@@ -26,7 +28,6 @@ export default function BookRequestPage() {
     const fetchBooks = async () => {
       try {
         const res = await axios.get('http://localhost:3000/api/books/books');
-        console.log("Fetched data:", res.data);
         if (Array.isArray(res.data)) {
             setBooks(res.data);
             setFilteredBooks(res.data);
@@ -41,6 +42,25 @@ export default function BookRequestPage() {
     };
     fetchBooks();
   }, []);
+
+  
+// 🔁 2. Refetch when refresh flag is set (after book deletion)
+useEffect(() => {
+  const refreshTrigger = localStorage.getItem("refreshBooks");
+  if (refreshTrigger === "true") {
+    axios.get("http://localhost:3000/api/books/books")
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setBooks(res.data);
+          setFilteredBooks(res.data);
+        }
+      })
+      .catch((err) => console.error("Error refetching books:", err));
+
+    localStorage.removeItem("refreshBooks");
+  }
+}, [filteredBooks.length]);
+
 
   // 🔍 Filter based on category, location, and title
   useEffect(() => {
@@ -67,19 +87,21 @@ export default function BookRequestPage() {
   };
 
   const confirmRequest = async (bookId, title) => {
+    setLoading(true);
     try {
       const userData = JSON.parse(localStorage.getItem('userData')); 
 
       if (!userData || !userData.email || !userData.uid) {
         console.error('User not logged in properly. Missing email or userId.');
         alert('Please login first to request a book.');
+        setLoading(false);
         return;
       }
 
       const book = books.find(b => b._id === bookId);
       await axios.post('http://localhost:3000/api/bookRequests/create', {
         bookId,
-        donorId: book.userId,  // or however you're storing it
+        donorId: book.donorId,  // or however you're storing it
         requesterId: userData.uid,
         requesterEmail: userData.email
       });
@@ -97,6 +119,9 @@ export default function BookRequestPage() {
     } catch (err) {
       console.error("Error sending book request:", err);
     }
+    finally {
+    setLoading(false); // hide loader
+  }
   };
   
 
@@ -186,9 +211,10 @@ export default function BookRequestPage() {
                 <div className="flex justify-between gap-2">
                   <button
                     onClick={() => confirmRequest(book._id, book.title)}
-                    className="w-1/2 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md font-medium cursor-pointer"
+                    className="w-1/2 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md font-medium cursor-pointer disabled:opacity-50"
+                    disabled={loading}
                   >
-                    Confirm
+                    {loading ? 'Requesting...' : 'Confirm'}
                   </button>
                   <button
                     onClick={() => setActiveRequestId(null)}

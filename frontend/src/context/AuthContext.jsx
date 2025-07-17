@@ -31,9 +31,16 @@ export const AuthProvider = ({children}) => {
     }
 
     // logout the user
-    const logoutUser = () => {
-        return signOut(auth)
+    const logoutUser = async () => {
+        try {
+            await signOut(auth);
+            localStorage.removeItem("user");      // from onAuthStateChanged
+            localStorage.removeItem("userData");  // your MongoDB user info
+        } catch (error) {
+            console.error("Error logging out:", error);
+        }
     }
+
 
     // manage user
     useEffect(() => {

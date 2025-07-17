@@ -6,6 +6,11 @@ const fs = require('fs');
 const donateRoutes = require('./src/donate/donateRoutes');
 const userRoutes = require('./src/users/userRoutes');
 const bookRoutes = require('./src/books/bookRoutes')
+const bookReqRoutes = require('./src/requestBooks/bookReqRoutes');
+const notificationRoutes = require('./src/notification/notificationRoutes');
+const testMailRoute = require('./src/mails/mailRoutes');
+const dashboardStats = require('./src/dashboard/dashBoardRoute');
+
 
 const app = express();
 
@@ -28,6 +33,10 @@ require('dotenv').config();
 app.use('/api/donate', donateRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/books', bookRoutes);
+app.use('/api/bookRequests', bookReqRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/dashboard', dashboardStats);
+app.use('/api', testMailRoute);
 
 async function main() {
   try {
@@ -43,3 +52,4 @@ async function main() {
 }
 
 main();
+

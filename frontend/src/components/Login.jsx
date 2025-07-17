@@ -13,32 +13,53 @@ function Login() {
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = async (data) => {
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      await loginUser(data.email, data.password);
-      navigate('/home');
-    } catch (err) {
-      setError('Please register your email and password');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  setIsLoading(true);
+  setError('');
+
+  try {
+    const userCredential = await loginUser(data.email, data.password);
+    const user = userCredential.user;
+
+    // ✅ Fetch user details from your MongoDB using UID
+    const res = await fetch(`http://localhost:3000/api/users/register/${user.uid}`);
+    const userData = await res.json();
+
+    localStorage.setItem("userData", JSON.stringify(userData));
+
+    navigate('/home');
+  } catch (err) {
+    console.error(err);
+    setError('Please register your email and password');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError('');
-    
+
     try {
-      await signInWithGoogle();
+      const result = await signInWithGoogle();
+      const user = result.user;
+
+      // ✅ Fetch user data from MongoDB by UID
+      const res = await fetch(`http://localhost:3000/api/users/register/${user.uid}`);
+      const userData = await res.json();
+
+      // ✅ Store in localStorage
+      localStorage.setItem("userData", JSON.stringify(userData));
+
       navigate('/home');
     } catch (err) {
+      console.error(err);
       setError('Login with Google failed');
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handleFacebookSignIn = () => {
     setError('Facebook login not implemented yet');

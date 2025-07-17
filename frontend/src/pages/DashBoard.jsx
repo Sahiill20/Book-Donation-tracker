@@ -17,6 +17,7 @@ const Dashboard = () => {
 
   const [stats, setStats] = useState({
     donatedBooks: 0,
+    booksAdded: 0,
     pendingDonations: 0,
     approvedRequests: 0,
     pendingRequests: 0,
@@ -96,14 +97,6 @@ const Dashboard = () => {
     }
   };
 
-  // Enhanced Calendar Functions
-  const addDonationDate = (date = new Date()) => {
-    const dateStr = date.toISOString().split('T')[0];
-    const updatedDates = [...new Set([...donationDates, dateStr])];
-    setDonationDates(updatedDates);
-    localStorage.setItem('donationDates', JSON.stringify(updatedDates));
-  };
-
   const generateCalendarDays = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -128,13 +121,6 @@ const Dashboard = () => {
     return [...emptyCells, ...days];
   };
 
-  // Make addDonationDate available globally
-  useEffect(() => {
-    window.addDonationDate = addDonationDate;
-    return () => {
-      delete window.addDonationDate;
-    };
-  }, [donationDates]);
 
   // Fetching stored data
   useEffect(() => {
@@ -148,47 +134,75 @@ const Dashboard = () => {
       setProfileImage(savedImage);
     }
 
-    const savedDonations = JSON.parse(localStorage.getItem('donationDates')) || [];
-    const normalizedDates = savedDonations.map(date => {
-      const d = new Date(date);
-      return new Date(Date.UTC(
-        d.getUTCFullYear(),
-        d.getUTCMonth(),
-        d.getUTCDate()
-      )).toISOString().split('T')[0];
-    });
-    setDonationDates(normalizedDates);
+    const fetchDonationDates = async () => {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('user'));
+      const uid = localUser?._id;
+
+      const res = await axios.get(`http://localhost:3000/api/donate/donation-dates?donorId=${uid}`);
+      setDonationDates(res.data.donationDates); // Should be an array of YYYY-MM-DD strings
+    } catch (err) {
+      console.error("Failed to fetch donation dates", err);
+    }
+  };
+
+  fetchDonationDates();
   }, []);
 
   // Fetch stats from server
   useEffect(() => {
-    const fetchDonationStats = async () => {
-      try {
-        const localUser = JSON.parse(localStorage.getItem('user'));
-        const uid = localUser?._id;
+  const fetchDashboardStats = async () => {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('user'));
+      const uid = localUser?._id;
 
-        const countResponse = await axios.get(`http://localhost:3000/api/donate/count?donorId=${uid}`);
-        const donationCount = Number(countResponse.data.totalDonated) || 0;
+      const res = await axios.get(`http://localhost:3000/api/dashboard/stats?uid=${uid}`);
 
-        const localStats = JSON.parse(localStorage.getItem('dashboardStats')) || {};
+      const { booksAdded, booksDonated } = res.data;
 
-        setStats({
-          donatedBooks: donationCount,
-          pendingDonations: localStats.pendingDonations || 0,
-          approvedRequests: localStats.approvedRequests || 0,
-          pendingRequests: localStats.pendingRequests || 0,
-          rewardsEarned: localStats.rewardsEarned || 0
-        });
+      setStats(prev => ({
+        ...prev,
+        donatedBooks: booksDonated,
+        booksAdded:  booksAdded,
+        rewardsEarned: booksDonated * 10, // or any logic you want
+        pendingDonations: 0,              // you can update this later if needed
+        approvedRequests: 0,
+        pendingRequests: 0
+      }));
 
-      } catch (error) {
-        console.error("Error fetching donation stats:", error);
-        const localStatsFallback = JSON.parse(localStorage.getItem('dashboardStats')) || stats;
-        setStats(localStatsFallback);
-      }
-    };
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      const fallbackStats = JSON.parse(localStorage.getItem('dashboardStats')) || stats;
+      setStats(fallbackStats);
+    }
+  };
 
-    fetchDonationStats();
-  }, []);
+  fetchDashboardStats();
+}, []);
+
+useEffect(() => {
+  const fetchRequestCounts = async () => {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('user'));
+      const uid = localUser?._id;
+
+      const res = await axios.get(`http://localhost:3000/api/notifications/request-counts?donorId=${uid}`);
+      const { pendingRequests, approvedRequests } = res.data;
+
+      setStats(prev => ({
+        ...prev,
+        approvedRequests,
+        pendingRequests
+      }));
+    } catch (err) {
+      console.error('Failed to fetch request counts:', err);
+    }
+  };
+
+  fetchRequestCounts();
+}, []);
+
+
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -268,6 +282,12 @@ const Dashboard = () => {
           <div className="bg-white p-6 rounded-lg shadow text-center">
             <div className="text-3xl font-bold text-green-600">{stats.donatedBooks}</div>
             <p className="text-gray-600 mt-1">Books Donated</p>
+          </div>
+
+          {/* Books Added */}
+          <div className="bg-white p-6 rounded-lg shadow text-center">
+            <div className="text-3xl font-bold text-blue-600">{stats.booksAdded}</div>
+            <p className="text-gray-600 mt-1">Books Added</p>
           </div>
 
           {/* Enhanced Calendar */}

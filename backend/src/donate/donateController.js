@@ -54,7 +54,31 @@ const getDonationCount = async (req, res) => {
   }
 };
 
+const getDonationDates = async (req, res) => {
+  try {
+    const { donorId } = req.query;
+    if (!donorId) {
+      return res.status(400).json({ message: 'Missing donorId' });
+    }
+
+    const donations = await Donate.find({ donorId, status: 'donated' });
+
+    const dates = donations.map(donation => 
+      new Date(donation.createdAt).toISOString().split('T')[0]
+    );
+
+    const uniqueDates = [...new Set(dates)];
+
+    res.status(200).json({ donationDates: uniqueDates });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
 module.exports = {
   createDonation,
-  getDonationCount
+  getDonationCount,
+  getDonationDates 
+
 };

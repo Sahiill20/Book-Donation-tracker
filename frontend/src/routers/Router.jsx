@@ -5,7 +5,9 @@ import SignUp from "../components/SignUp";
 import Home from "../pages/Home";
 import Dashboard from "../pages/DashBoard";
 import DonatePage from "../pages/DonatePage";
-import RequestBook from "../pages/RequestBook"
+import RequestBook from "../pages/RequestBook";
+import Notification from "../pages/Notification";
+import PrivateRoute from "../components/PrivateRoute"; // Adjust path as needed
 import { Navigate } from "react-router-dom";
 
 const Router = createBrowserRouter([
@@ -27,22 +29,46 @@ const Router = createBrowserRouter([
       },
 
       {
-        path:"/Home",
-        element:<Home />
-        
+          path: "/Home",
+          element: (
+            <PrivateRoute>
+              <Home />
+            </PrivateRoute>
+          )
       },
       {
-        path:"/Dashboard",
-        element:<Dashboard />
+        path: "/Dashboard",
+        element: (
+          <PrivateRoute>
+            <Dashboard />
+          </PrivateRoute>
+        )
       },
       {
-        path:"/DonatePage",
-        element:<DonatePage />
-      },
-      {
-        path:"/RequestBook",
-        element:<RequestBook />
-      }
+  path: "/DonatePage",
+  element: (
+    <PrivateRoute>
+      <DonatePage />
+    </PrivateRoute>
+  )
+},
+{
+  path: "/RequestBook",
+  element: (
+    <PrivateRoute>
+      <RequestBook />
+    </PrivateRoute>
+  )
+},
+{
+  path: "/notifications",
+  element: (
+    <PrivateRoute>
+      <Notification />
+    </PrivateRoute>
+  )
+}
+
     ]
   },
 ]);
